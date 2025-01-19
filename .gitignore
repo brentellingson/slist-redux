@@ -26,3 +26,6 @@ bin/
 
 # env file
 .env
+
+# vscode stuff
+.vscode/
