@@ -31,32 +31,26 @@ func (p *Parser) parseExpression() any {
 }
 
 func (p *Parser) parseList() []any {
+	list := []any{}
 	p.expect('(')
-	list := p.parseEntries([]any{})
+	p.whitespace()
+	for !p.eof() && p.expression[p.cursor] != ')' {
+		list = append(list, p.parseExpression())
+		p.whitespace()
+	}
 	p.expect(')')
 	return list
 }
 
-func (p *Parser) parseEntries(list []any) []any {
-	p.whitespace()
-	if p.eof() || p.expression[p.cursor] == ')' {
-		return list
-	}
-	entry := p.parseExpression()
-	list = append(list, entry)
-	return p.parseEntries(list)
-}
-
 func (p *Parser) parseAtom() any {
-	var atom []rune
+	start := p.cursor
 	for !p.eof() && !iswhitespace(p.expression[p.cursor]) && p.expression[p.cursor] != ')' {
-		atom = append(atom, p.expression[p.cursor])
 		p.cursor++
 	}
-	if ival, err := strconv.Atoi(string(atom)); err == nil {
+	if ival, err := strconv.Atoi(string(p.expression[start:p.cursor])); err == nil {
 		return ival
 	}
-	return string(atom)
+	return string(p.expression[start:p.cursor])
 }
 
 func (p *Parser) expect(c rune) {
