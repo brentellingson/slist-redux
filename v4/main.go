@@ -8,7 +8,6 @@ import (
 type Parser struct {
 	expression []rune
 	cursor     int
-	ast        [][]any
 }
 
 func Parse(expression string) any {
@@ -31,33 +30,21 @@ func (p *Parser) parseExpression() any {
 	return p.parseAtom()
 }
 
-func (p *Parser) push(list []any) {
-	p.ast = append(p.ast, list)
-}
-
-func (p *Parser) pop() []any {
-	rval := p.ast[len(p.ast)-1]
-	p.ast = p.ast[:len(p.ast)-1]
-	return rval
-}
-
 func (p *Parser) parseList() []any {
-	p.push([]any{}) // parseEntries parses into the top list on the stack
 	p.expect('(')
-	p.parseEntries()
+	list := p.parseEntries([]any{})
 	p.expect(')')
-	return p.pop() // return the top list on the stack
+	return list
 }
 
-func (p *Parser) parseEntries() {
+func (p *Parser) parseEntries(list []any) []any {
 	p.whitespace()
-
 	if p.eof() || p.expression[p.cursor] == ')' {
-		return
+		return list
 	}
 	entry := p.parseExpression()
-	p.ast[len(p.ast)-1] = append(p.ast[len(p.ast)-1], entry)
-	p.parseEntries()
+	list = append(list, entry)
+	return p.parseEntries(list)
 }
 
 func (p *Parser) parseAtom() any {
